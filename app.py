@@ -72,6 +72,30 @@ def place_order():
     unit_price = product['price']
     total_price = quantity * unit_price
 
+
+    # Reduce stock in Product Service
+    try:
+        stock_response = requests.put(
+            f'{PRODUCT_SERVICE_URL}/products/{product_id}',
+            json={
+                "name": product_name,
+                "price": unit_price,
+                "stock": product['stock'] - quantity
+            },
+            timeout=5
+        )
+
+    except requests.exceptions.RequestException:
+        return jsonify({
+            "message": "Unable to update product stock"
+        }), 503
+
+    if stock_response.status_code != 200:
+        return jsonify({
+            "message": "Failed to update product stock"
+        }), 502
+
+
     connection = get_db_connection()
 
     cursor = connection.execute('''
