@@ -2,8 +2,14 @@
 from flask import Flask, jsonify, request
 import sqlite3
 import requests
+import os
 
 from database import get_db_connection, create_table
+
+PRODUCT_SERVICE_URL = os.getenv(
+    "PRODUCT_SERVICE_URL",
+    "http://127.0.0.1:5001"
+)
 
 app = Flask(__name__)
 
@@ -34,10 +40,11 @@ def place_order():
     if not isinstance(quantity, int) or quantity <= 0:
         return jsonify({"message": "Valid positive quantity is required"}), 400
 
+   
     try:
         # Get product details from Product Service
         response = requests.get(
-            f'http://127.0.0.1:5001/products/{product_id}',
+            f'{PRODUCT_SERVICE_URL}/products/{product_id}',
             timeout=5
         )
 
@@ -45,6 +52,7 @@ def place_order():
         return jsonify({
             "message": "Product Service is unavailable"
         }), 503
+
 
     if response.status_code == 404:
         return jsonify({"message": "Product not found"}), 404
